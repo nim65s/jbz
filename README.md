@@ -7,3 +7,5 @@ Try it in a `zellij` session after a `cargo build`:
 ```
 zellij action start-or-reload-plugin file:target/wasm32-wasi/debug/jbz.wasm
 ```
+
+![demo](./jbz.gif)
