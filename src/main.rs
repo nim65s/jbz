@@ -27,6 +27,7 @@ fn just_commands() -> Vec<String> {
 
 impl ZellijPlugin for State {
     fn load(&mut self) {
+        hide_self();
         subscribe(&[EventType::Key]);
         self.commands = just_commands();
         for cmd in &self.commands {
