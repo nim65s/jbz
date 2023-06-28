@@ -30,7 +30,7 @@ impl ZellijPlugin for State {
         subscribe(&[EventType::Key]);
         self.commands = just_commands();
         for cmd in &self.commands {
-            open_command_pane("just", vec![cmd]);
+            open_command_pane("bacon", vec!["just", "--", cmd]);
         }
     }
 

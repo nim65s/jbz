@@ -1,0 +1,5 @@
+default_job = "just"
+
+[jobs.just]
+command = ["just"]
+need_stdout = false
