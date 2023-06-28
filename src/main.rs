@@ -13,10 +13,14 @@ struct State {
 register_plugin!(State);
 
 fn just_commands() -> Vec<String> {
+    // let output = Command::new("just").arg("-l").output().unwrap();
+    // ↑ won't work in wasi, let's find another way
     let file = File::open("/host/.justfile").unwrap();
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents).unwrap();
+    // regex is another way, which kinda work here, but might not be optimal
+    // ref. https://github.com/casey/just/issues/365#issuecomment-1610357375
     Regex::new(r"\n.*:\n")
         .unwrap()
         .find_iter(&contents)
