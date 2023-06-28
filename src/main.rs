@@ -1,4 +1,7 @@
-use std::process::Command;
+use std::fs::File;
+use std::io::{BufReader, Read};
+
+use regex::Regex;
 use zellij_tile::prelude::*;
 
 #[derive(Default)]
@@ -10,11 +13,15 @@ struct State {
 register_plugin!(State);
 
 fn just_commands() -> Vec<String> {
-    let output = Command::new("just").arg("-l").output().unwrap();
-    String::from_utf8_lossy(&output.stdout)
-        .split('\n')
-        .skip(1)
-        .map(|s| s.trim().to_string())
+    let file = File::open("/host/.justfile").unwrap();
+    let mut buf_reader = BufReader::new(file);
+    let mut contents = String::new();
+    buf_reader.read_to_string(&mut contents).unwrap();
+    Regex::new(r"\n(.*):\n")
+        .unwrap()
+        .find_iter(&contents)
+        .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
+        .map(|cmd| cmd.to_string())
         .collect()
 }
 
