@@ -17,7 +17,7 @@ fn just_commands() -> Vec<String> {
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
     buf_reader.read_to_string(&mut contents).unwrap();
-    Regex::new(r"\n(.*):\n")
+    Regex::new(r"\n.*:\n")
         .unwrap()
         .find_iter(&contents)
         .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
@@ -28,7 +28,10 @@ fn just_commands() -> Vec<String> {
 impl ZellijPlugin for State {
     fn load(&mut self) {
         subscribe(&[EventType::Key]);
-        self.commands = just_commands()
+        self.commands = just_commands();
+        for cmd in &self.commands {
+            open_command_pane("just", vec![cmd]);
+        }
     }
 
     fn update(&mut self, event: Event) -> bool {
