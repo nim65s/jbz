@@ -36,7 +36,6 @@ impl ZellijPlugin for State {
         self.userspace_configuration = configuration;
         request_permission(&[PermissionType::RunCommands]);
         hide_self();
-        subscribe(&[EventType::Key]);
         self.commands = just_commands();
         for cmd in &self.commands {
             open_command_pane(CommandToRun {
@@ -47,17 +46,8 @@ impl ZellijPlugin for State {
         }
     }
 
-    fn update(&mut self, event: Event) -> bool {
-        let should_render = false;
-        if let Event::Key(Key::Char('b')) = event {
-            self.build_runs += 1;
-            open_command_pane_floating(CommandToRun {
-                path: "cargo".into(),
-                args: vec!["build".to_owned()],
-                cwd: None,
-            });
-        }
-        should_render
+    fn update(&mut self, _: Event) -> bool {
+        false
     }
 
     fn render(&mut self, rows: usize, cols: usize) {
