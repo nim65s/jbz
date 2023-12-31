@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-regex = "1.8.4"
-zellij-tile = "0.37.2"
+regex = "1.10.2"
+zellij-tile = "0.39.2"

@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{BufReader, Read};
 
@@ -8,6 +9,7 @@ use zellij_tile::prelude::*;
 struct State {
     build_runs: usize,
     commands: Vec<String>,
+    userspace_configuration: BTreeMap<String, String>,
 }
 
 register_plugin!(State);
@@ -30,12 +32,18 @@ fn just_commands() -> Vec<String> {
 }
 
 impl ZellijPlugin for State {
-    fn load(&mut self) {
+    fn load(&mut self, configuration: BTreeMap<String, String>) {
+        self.userspace_configuration = configuration;
+        request_permission(&[PermissionType::RunCommands]);
         hide_self();
         subscribe(&[EventType::Key]);
         self.commands = just_commands();
         for cmd in &self.commands {
-            open_command_pane("bacon", vec!["just", "--", cmd]);
+            open_command_pane(CommandToRun {
+                path: "bacon".into(),
+                args: vec!["just".to_owned(), "--".to_owned(), cmd.to_owned()],
+                cwd: None,
+            });
         }
     }
 
@@ -43,7 +51,11 @@ impl ZellijPlugin for State {
         let should_render = false;
         if let Event::Key(Key::Char('b')) = event {
             self.build_runs += 1;
-            open_command_pane_floating("cargo", vec!["build"]);
+            open_command_pane_floating(CommandToRun {
+                path: "cargo".into(),
+                args: vec!["build".to_owned()],
+                cwd: None,
+            });
         }
         should_render
     }
