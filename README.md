@@ -5,7 +5,7 @@ A [Zellij](https://zellij.dev/) plugin to display your [just](https://github.com
 
 Try it in a `zellij` session after a `cargo build`:
 ```
-zellij action start-or-reload-plugin file:target/wasm32-wasi/debug/jbz.wasm
+zellij action start-or-reload-plugin file:$PWD/target/wasm32-wasi/debug/jbz.wasm
 ```
 
 ![demo](./jbz.gif)
