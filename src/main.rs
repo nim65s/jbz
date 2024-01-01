@@ -8,12 +8,13 @@ use zellij_tile::prelude::*;
 
 #[derive(Default)]
 struct State {
+    all: bool,
     loaded: bool,
 }
 
 register_plugin!(State);
 
-fn just_commands() -> Result<Vec<String>> {
+fn just_commands(all: bool) -> Result<Vec<String>> {
     // let output = Command::new("just").arg("-l").output()?;
     // ↑ won't work in wasi, let's find another way
     let file = File::open("/host/.justfile")?;
@@ -22,15 +23,25 @@ fn just_commands() -> Result<Vec<String>> {
     buf_reader.read_to_string(&mut contents)?;
     // regex is another way, which kinda work here, but might not be optimal
     // ref. https://github.com/casey/just/issues/365#issuecomment-1610357375
-    Ok(Regex::new(r"\n.*:\n")?
-        .find_iter(&contents)
-        .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
-        .map(ToString::to_string)
-        .collect())
+    Ok(if all {
+        Regex::new(r"\nall:(.*)\n")?
+            .captures(&contents)
+            .map_or("", |c| c.get(1).map_or("", |m| m.as_str()))
+            .split_whitespace()
+            .map(ToString::to_string)
+            .collect()
+    } else {
+        Regex::new(r"\n.*:\n")?
+            .find_iter(&contents)
+            .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
+            .map(ToString::to_string)
+            .collect()
+    })
 }
 
 impl ZellijPlugin for State {
-    fn load(&mut self, _configuration: BTreeMap<String, String>) {
+    fn load(&mut self, configuration: BTreeMap<String, String>) {
+        self.all = configuration.contains_key("all");
         request_permission(&[PermissionType::RunCommands]);
         hide_self();
     }
@@ -44,7 +55,7 @@ impl ZellijPlugin for State {
             // This used to be in load(), but we can't run commands in load() anymore
             self.loaded = true;
 
-            if let Ok(cmds) = just_commands() {
+            if let Ok(cmds) = just_commands(self.all) {
                 for cmd in &cmds {
                     open_command_pane(CommandToRun {
                         path: "bacon".into(),
