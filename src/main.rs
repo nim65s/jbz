@@ -8,9 +8,6 @@ use zellij_tile::prelude::*;
 #[derive(Default)]
 struct State {
     loaded: bool,
-    build_runs: usize,
-    commands: Vec<String>,
-    userspace_configuration: BTreeMap<String, String>,
 }
 
 register_plugin!(State);
@@ -33,8 +30,7 @@ fn just_commands() -> Vec<String> {
 }
 
 impl ZellijPlugin for State {
-    fn load(&mut self, configuration: BTreeMap<String, String>) {
-        self.userspace_configuration = configuration;
+    fn load(&mut self, _configuration: BTreeMap<String, String>) {
         request_permission(&[PermissionType::RunCommands]);
         hide_self();
     }
@@ -43,31 +39,18 @@ impl ZellijPlugin for State {
         false
     }
 
-    fn render(&mut self, rows: usize, cols: usize) {
+    fn render(&mut self, _rows: usize, _cols: usize) {
         if !self.loaded {
             // This used to be in load(), but we can't run commands in load() anymore
             self.loaded = true;
 
-            self.commands = just_commands();
-            for cmd in &self.commands {
+            for cmd in &just_commands() {
                 open_command_pane(CommandToRun {
                     path: "bacon".into(),
                     args: vec!["just".to_owned(), "--".to_owned(), cmd.to_owned()],
                     cwd: None,
                 });
             }
-        }
-
-        println!();
-        println!("I have {rows} rows and {cols} columns");
-        println!();
-        println!("here are the available commands:");
-        for cmd in &self.commands {
-            println!(" - {cmd}");
-        }
-        println!();
-        if self.build_runs > 0 {
-            println!("Ran tests {} times!", self.build_runs);
         }
     }
 }
