@@ -14,6 +14,13 @@ struct State {
 
 register_plugin!(State);
 
+fn trims<'a>(cmd: impl Into<&'a str>) -> &'a str {
+    cmd.into()
+        .trim()
+        .trim_start_matches("all:")
+        .trim_end_matches(':')
+}
+
 fn just_commands(all: bool) -> Result<Vec<String>> {
     // let output = Command::new("just").arg("-l").output()?;
     // ↑ won't work in wasi, let's find another way
@@ -26,19 +33,15 @@ fn just_commands(all: bool) -> Result<Vec<String>> {
     Ok(if all {
         Regex::new(r"\nall:.*\n")?
             .find(&contents)
-            .map(|cmd| {
-                cmd.as_str()
-                    .trim()
-                    .trim_start_matches("all:")
-                    .split_whitespace()
-                    .map(ToString::to_string)
-                    .collect()
-            })
+            .map(trims)
             .unwrap_or_default()
+            .split_whitespace()
+            .map(ToString::to_string)
+            .collect()
     } else {
         Regex::new(r"\n.*:\n")?
             .find_iter(&contents)
-            .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
+            .map(trims)
             .map(ToString::to_string)
             .collect()
     })
