@@ -7,6 +7,7 @@ use zellij_tile::prelude::*;
 
 #[derive(Default)]
 struct State {
+    loaded: bool,
     build_runs: usize,
     commands: Vec<String>,
     userspace_configuration: BTreeMap<String, String>,
@@ -36,14 +37,6 @@ impl ZellijPlugin for State {
         self.userspace_configuration = configuration;
         request_permission(&[PermissionType::RunCommands]);
         hide_self();
-        self.commands = just_commands();
-        for cmd in &self.commands {
-            open_command_pane(CommandToRun {
-                path: "bacon".into(),
-                args: vec!["just".to_owned(), "--".to_owned(), cmd.to_owned()],
-                cwd: None,
-            });
-        }
     }
 
     fn update(&mut self, _: Event) -> bool {
@@ -51,6 +44,20 @@ impl ZellijPlugin for State {
     }
 
     fn render(&mut self, rows: usize, cols: usize) {
+        if !self.loaded {
+            // This used to be in load(), but we can't run commands in load() anymore
+            self.loaded = true;
+
+            self.commands = just_commands();
+            for cmd in &self.commands {
+                open_command_pane(CommandToRun {
+                    path: "bacon".into(),
+                    args: vec!["just".to_owned(), "--".to_owned(), cmd.to_owned()],
+                    cwd: None,
+                });
+            }
+        }
+
         println!();
         println!("I have {rows} rows and {cols} columns");
         println!();
