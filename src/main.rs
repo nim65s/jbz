@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{BufReader, Read};
+use std::string::ToString;
 
 use regex::Regex;
 use zellij_tile::prelude::*;
@@ -12,21 +13,20 @@ struct State {
 
 register_plugin!(State);
 
-fn just_commands() -> Vec<String> {
-    // let output = Command::new("just").arg("-l").output().unwrap();
+fn just_commands() -> Result<Vec<String>> {
+    // let output = Command::new("just").arg("-l").output()?;
     // ↑ won't work in wasi, let's find another way
-    let file = File::open("/host/.justfile").unwrap();
+    let file = File::open("/host/.justfile")?;
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
-    buf_reader.read_to_string(&mut contents).unwrap();
+    buf_reader.read_to_string(&mut contents)?;
     // regex is another way, which kinda work here, but might not be optimal
     // ref. https://github.com/casey/just/issues/365#issuecomment-1610357375
-    Regex::new(r"\n.*:\n")
-        .unwrap()
+    Ok(Regex::new(r"\n.*:\n")?
         .find_iter(&contents)
         .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
-        .map(|cmd| cmd.to_string())
-        .collect()
+        .map(ToString::to_string)
+        .collect())
 }
 
 impl ZellijPlugin for State {
@@ -44,12 +44,14 @@ impl ZellijPlugin for State {
             // This used to be in load(), but we can't run commands in load() anymore
             self.loaded = true;
 
-            for cmd in &just_commands() {
-                open_command_pane(CommandToRun {
-                    path: "bacon".into(),
-                    args: vec!["just".to_owned(), "--".to_owned(), cmd.to_owned()],
-                    cwd: None,
-                });
+            if let Ok(cmds) = just_commands() {
+                for cmd in &cmds {
+                    open_command_pane(CommandToRun {
+                        path: "bacon".into(),
+                        args: vec!["just".to_owned(), "--".to_owned(), cmd.to_owned()],
+                        cwd: None,
+                    });
+                }
             }
         }
     }
