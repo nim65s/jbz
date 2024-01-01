@@ -14,24 +14,6 @@ struct State {
 
 register_plugin!(State);
 
-fn parse_justfile(contents: &str, all: bool) -> Option<Vec<String>> {
-    Some(if all {
-        Regex::new(r"\nall:.*\n")
-            .ok()?
-            .find_iter(contents)
-            .find_map(|cmd| Some(cmd.as_str().trim().strip_prefix("all:")?.split_whitespace()))?
-            .map(ToString::to_string)
-            .collect()
-    } else {
-        Regex::new(r"\n.*:\n")
-            .ok()?
-            .find_iter(contents)
-            .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
-            .map(ToString::to_string)
-            .collect()
-    })
-}
-
 fn just_commands(all: bool) -> Result<Vec<String>> {
     // let output = Command::new("just").arg("-l").output()?;
     // ↑ won't work in wasi, let's find another way
@@ -41,7 +23,25 @@ fn just_commands(all: bool) -> Result<Vec<String>> {
     buf_reader.read_to_string(&mut contents)?;
     // regex is another way, which kinda work here, but might not be optimal
     // ref. https://github.com/casey/just/issues/365#issuecomment-1610357375
-    Ok(parse_justfile(&contents, all).unwrap_or_default())
+    Ok(if all {
+        Regex::new(r"\nall:.*\n")?
+            .find(&contents)
+            .map(|cmd| {
+                cmd.as_str()
+                    .trim()
+                    .trim_start_matches("all:")
+                    .split_whitespace()
+                    .map(ToString::to_string)
+                    .collect()
+            })
+            .unwrap_or_default()
+    } else {
+        Regex::new(r"\n.*:\n")?
+            .find_iter(&contents)
+            .filter_map(|cmd| cmd.as_str().trim().strip_suffix(':'))
+            .map(ToString::to_string)
+            .collect()
+    })
 }
 
 impl ZellijPlugin for State {
