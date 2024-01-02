@@ -10,5 +10,3 @@ clippy:
 
 check:
     cargo check {{args}}
-
-all: clippy

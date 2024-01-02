@@ -1,6 +1,6 @@
 ci:
   skip:
-  - just-all
+  - check
 repos:
 - repo: https://github.com/nim65s/pre-commit-sort
   rev: v0.1.0
@@ -26,8 +26,8 @@ repos:
   - id: trailing-whitespace
 - repo: local
   hooks:
-  - id: just-all
-    name: just-all
-    entry: just all
+  - id: check
+    name: check
+    entry: cargo check
     language: rust
     pass_filenames: false
