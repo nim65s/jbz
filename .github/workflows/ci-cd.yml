@@ -1,0 +1,53 @@
+name: "Build and publish"
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - main
+  pull_request_target:
+    branches:
+      - main
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasi
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v3
+        with:
+          path: target/wasm32-wasi/release/jbz.wasm
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasi
+      - run: cargo test
+
+  release:
+    needs: [build, test]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - run: curl https://github.com/nim65s.gpg | gpg --import
+      - name: validate signature
+        run: >
+          git verify-tag --raw ${{ github.ref_name }} 2>&1
+          | grep -q 'VALIDSIG 9B1A79065D2F2B806C8A5A1C7D2ACDAF4653CF28'
+      - uses: actions/download-artifact@v3
+      - run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - run: gh release create -t "Release ${{ env.TAG}}" "${{ env.TAG }}" artifact/jbz.wasm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
