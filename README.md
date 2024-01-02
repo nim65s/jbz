@@ -9,3 +9,5 @@ zellij action start-or-reload-plugin file:$PWD/target/wasm32-wasi/debug/jbz.wasm
 ```
 
 ![demo](./jbz.gif)
+
+Optionnaly, with a `all=true` configuration option, jbz will look for `all:<whitespace-separated-actions>` and run those.
