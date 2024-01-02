@@ -1,5 +1,8 @@
 name: "Build and publish"
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
