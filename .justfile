@@ -5,10 +5,10 @@ clippy_w := "-W clippy::pedantic -W clippy::nursery -W clippy::unwrap_used -W cl
 clippy_a := "-A clippy::missing-errors-doc -A clippy::missing-panics-doc"
 clippy_args := "-- " + clippy_w + " " + clippy_a
 
-check:
-    cargo check {{args}}
-
 clippy:
     cargo clippy {{args}} {{clippy_args}}
+
+check:
+    cargo check {{args}}
 
 all: clippy
