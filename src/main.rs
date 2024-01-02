@@ -32,10 +32,8 @@ fn just_commands(all: bool) -> Result<Vec<String>> {
     // ref. https://github.com/casey/just/issues/365#issuecomment-1610357375
     Ok(if all {
         Regex::new(r"\nall:.*\n")?
-            .find(&contents)
-            .map(trims)
-            .unwrap_or_default()
-            .split_whitespace()
+            .find_iter(&contents)
+            .flat_map(|c| trims(c).split_whitespace())
             .map(ToString::to_string)
             .collect()
     } else {
