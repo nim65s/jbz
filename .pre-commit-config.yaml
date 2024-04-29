@@ -3,7 +3,7 @@ ci:
   - check
 repos:
 - repo: https://github.com/nim65s/pre-commit-sort
-  rev: v0.1.0
+  rev: v0.2.0
   hooks:
   - id: pre-commit-sort
 - repo: https://github.com/pre-commit/pre-commit-hooks
