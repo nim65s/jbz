@@ -18,14 +18,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-wasi
+          targets: wasm32-wasip1
       - run: cargo build --release
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v7
         with:
-          path: target/wasm32-wasi/release/jbz.wasm
+          path: target/wasm32-wasip1/release/jbz.wasm
 
   release:
     needs: [build]
@@ -40,7 +40,7 @@ jobs:
         run: >
           git verify-tag --raw ${{ github.ref_name }} 2>&1
           | grep -q 'VALIDSIG 9B1A79065D2F2B806C8A5A1C7D2ACDAF4653CF28'
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v8
       - run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       - run: gh release create -t "Release ${{ env.TAG}}" "${{ env.TAG }}" artifact/jbz.wasm
         env:
